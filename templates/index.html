@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobAgent — Ramya's Job Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+  <!-- ── Sidebar ── -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">JobAgent</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#dashboard" class="nav-link" data-view="dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="#jobs" class="nav-link" data-view="jobs">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        All Jobs
+        <span id="jobs-count-badge" class="badge-count"></span>
+      </a>
+      <a href="#pipeline" class="nav-link" data-view="pipeline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        Pipeline
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="btn-new-search" class="btn btn-primary btn-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Run New Search
+      </button>
+      <div class="profile-line">
+        <span class="profile-dot"></span>
+        <span class="profile-name">Ramya Sandadi</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <main id="main">
+    <div id="view-dashboard" class="view hidden"></div>
+    <div id="view-jobs"      class="view hidden"></div>
+    <div id="view-pipeline"  class="view hidden"></div>
+  </main>
+
+  <!-- ── Detail Panel (slide-over from right) ── -->
+  <div id="overlay" class="overlay hidden"></div>
+  <aside id="detail-panel" class="detail-panel hidden">
+    <div id="panel-content"></div>
+  </aside>
+
+  <!-- ── Search Progress Overlay ── -->
+  <div id="search-overlay" class="search-overlay hidden">
+    <div class="search-overlay-card">
+      <div class="spinner"></div>
+      <div class="search-overlay-title">Searching job boards...</div>
+      <div id="search-progress-text" class="search-overlay-progress">Starting up...</div>
+      <button id="btn-search-dismiss" class="btn btn-ghost" style="margin-top:16px;display:none;">Done</button>
+    </div>
+  </div>
+
+  <!-- ── Toast ── -->
+  <div id="toast" class="toast hidden" role="alert"></div>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
