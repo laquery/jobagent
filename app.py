@@ -9,6 +9,7 @@ The CLI (python main.py ...) continues to work alongside this server
 since both share the same SQLite database.
 """
 
+import os
 import threading
 import webbrowser
 from flask import Flask, jsonify, request, render_template, abort
@@ -186,8 +187,12 @@ def api_search_status():
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    def _open_browser():
-        webbrowser.open("http://localhost:5000")
+    port = int(os.environ.get("PORT", 5000))
+    is_local = port == 5000 and not os.environ.get("RAILWAY_ENVIRONMENT")
 
-    threading.Timer(1.2, _open_browser).start()
-    app.run(host="127.0.0.1", port=5000, debug=False, threaded=True, use_reloader=False)
+    if is_local:
+        def _open_browser():
+            webbrowser.open(f"http://localhost:{port}")
+        threading.Timer(1.2, _open_browser).start()
+
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True, use_reloader=False)
