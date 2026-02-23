@@ -62,6 +62,11 @@ def _score_job(title: str, description: str) -> int:
     for role in config.TARGET_ROLES:
         if role.lower() in title_lower:
             score += 10
+    # Penalise titles that are likely overqualified (~4 yrs experience)
+    for kw in config.OVERQUALIFIED_TITLE_KEYWORDS:
+        if kw in title_lower:
+            score -= config.OVERQUALIFIED_PENALTY
+            break  # one penalty max per job
     return score
 
 

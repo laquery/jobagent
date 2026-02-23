@@ -69,6 +69,23 @@ ADZUNA_APP_KEY = ""
 # The Muse: Sign up free at https://www.themuse.com/developers/api/v2
 THE_MUSE_API_KEY = ""
 
+# ── Seniority filter (based on ~4 years experience) ─────────────────────────
+# Jobs whose TITLE contains any of these words get a score penalty so they
+# sink below relevant results. They are NOT hidden — still visible if needed.
+OVERQUALIFIED_TITLE_KEYWORDS = [
+    "senior", "sr.",
+    "principal",
+    "staff",
+    "lead",
+    "head of",
+    "director",
+    "vp ", "vice president",
+    "manager",
+    "associate director",
+]
+# How many points to subtract per overqualified keyword found in the title
+OVERQUALIFIED_PENALTY = 20
+
 # ── Search Settings ──────────────────────────────────────────────────────────
 MAX_RESULTS_PER_SOURCE = 25
 DATABASE_PATH = "jobagent.db"
