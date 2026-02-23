@@ -152,10 +152,12 @@ def api_search():
         _search_state["added"]    = 0
         _search_state["found"]    = 0
 
-    def _run():
+    # Read request data HERE — request context won't exist inside the thread
+    data = request.get_json(force=True, silent=True) or {}
+    role = data.get("role")
+
+    def _run(role):
         try:
-            data = request.get_json(force=True, silent=True) or {}
-            role = data.get("role")
             roles = [role] if role else config.TARGET_ROLES
 
             _search_state["progress"] = f"Searching {len(roles)} role(s) across all sources..."
@@ -174,7 +176,7 @@ def api_search():
                 _search_state["progress"] = f"Error: {e}"
                 _search_state["running"]  = False
 
-    t = threading.Thread(target=_run, daemon=True)
+    t = threading.Thread(target=_run, args=(role,), daemon=True)
     t.start()
     return jsonify({"ok": True, "message": "Search started"})
 
