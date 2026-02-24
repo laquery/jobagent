@@ -63,6 +63,9 @@ def api_jobs():
         jobs = sorted(jobs, key=lambda j: j.get("date_posted") or "", reverse=True)
     elif sort == "company":
         jobs = sorted(jobs, key=lambda j: (j.get("company") or "").lower())
+    elif sort == "deadline":
+        # Jobs with no deadline go to the end; soonest deadline first
+        jobs = sorted(jobs, key=lambda j: j.get("apply_deadline") or "9999-99-99")
     # default: already sorted by score from tracker
 
     return jsonify(jobs)

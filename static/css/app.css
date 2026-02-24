@@ -468,6 +468,17 @@ td.col-actions {
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
+.deadline-pill {
+  display: inline-block;
+  background: #fffbeb;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
+}
 .tag-source {
   display: inline-block;
   background: var(--color-surface-alt);

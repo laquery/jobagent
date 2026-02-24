@@ -49,9 +49,10 @@ export async function renderJobs() {
           Remote only
         </label>
         <select id="filter-sort" class="filter-select">
-          <option value="score" ${_sortCol === "score" ? "selected" : ""}>Sort: Best match</option>
-          <option value="date"  ${_sortCol === "date"  ? "selected" : ""}>Sort: Newest</option>
-          <option value="company" ${_sortCol === "company" ? "selected" : ""}>Sort: Company A–Z</option>
+          <option value="score"    ${_sortCol === "score"    ? "selected" : ""}>Sort: Best match</option>
+          <option value="deadline" ${_sortCol === "deadline" ? "selected" : ""}>Sort: Deadline soonest</option>
+          <option value="date"     ${_sortCol === "date"     ? "selected" : ""}>Sort: Newest</option>
+          <option value="company"  ${_sortCol === "company"  ? "selected" : ""}>Sort: Company A–Z</option>
         </select>
       </div>
     </div>
@@ -64,13 +65,14 @@ export async function renderJobs() {
             <th>Title / Company</th>
             <th>Location</th>
             <th>Salary</th>
+            <th>Deadline</th>
             <th>Posted</th>
             <th>Status</th>
             <th style="min-width:200px">Actions</th>
           </tr>
         </thead>
         <tbody id="jobs-tbody">
-          <tr><td colspan="7"><div class="empty-state"><div class="spinner" style="margin:0 auto 12px"></div><p>Loading jobs…</p></div></td></tr>
+          <tr><td colspan="8"><div class="empty-state"><div class="spinner" style="margin:0 auto 12px"></div><p>Loading jobs…</p></div></td></tr>
         </tbody>
       </table>
       <div class="table-footer" id="table-footer" style="display:none">
@@ -148,7 +150,7 @@ function _renderTable() {
 
   if (_jobs.length === 0) {
     tbody.innerHTML = `
-      <tr><td colspan="7">
+      <tr><td colspan="8">
         <div class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <h3>No jobs found</h3>
@@ -199,8 +201,11 @@ function _jobRow(job) {
   const loc     = remote
     ? `<span class="tag-remote">Remote</span>`
     : (job.location ? `<span class="muted text-sm">${_esc(job.location)}</span>` : `<span class="muted text-sm">—</span>`);
-  const salary  = job.salary ? `<span class="text-sm">${_esc(job.salary)}</span>` : `<span class="muted text-sm">—</span>`;
-  const posted  = job.date_posted ? `<span class="text-sm muted">${timeAgo(job.date_posted)}</span>` : `<span class="muted text-sm">—</span>`;
+  const salary   = job.salary ? `<span class="text-sm">${_esc(job.salary)}</span>` : `<span class="muted text-sm">—</span>`;
+  const posted   = job.date_posted ? `<span class="text-sm muted">${timeAgo(job.date_posted)}</span>` : `<span class="muted text-sm">—</span>`;
+  const deadline = job.apply_deadline
+    ? `<span class="deadline-pill">${_esc(job.apply_deadline)}</span>`
+    : `<span class="muted text-sm">—</span>`;
 
   return `
     <tr data-id="${jobId}">
@@ -211,6 +216,7 @@ function _jobRow(job) {
       </td>
       <td>${loc}</td>
       <td>${salary}</td>
+      <td>${deadline}</td>
       <td>${posted}</td>
       <td>${statusBadge(status)}</td>
       <td class="col-actions">
