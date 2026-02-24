@@ -5,6 +5,7 @@ Application tracker — SQLite-backed database to track job applications.
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse, urlunparse
 
 import config
 
@@ -77,6 +78,17 @@ def init_db():
 
 # ── Jobs ─────────────────────────────────────────────────────────────────────
 
+def _clean_url(url: str) -> str:
+    """Strip tracking query parameters so the same job always maps to one URL."""
+    if not url:
+        return url
+    try:
+        p = urlparse(url)
+        return urlunparse((p.scheme, p.netloc, p.path, "", "", ""))
+    except Exception:
+        return url
+
+
 def save_jobs(jobs: list[dict]) -> int:
     """Insert jobs into the database. Returns count of newly added jobs."""
     conn = _connect()
@@ -94,7 +106,7 @@ def save_jobs(jobs: list[dict]) -> int:
                     job["title"],
                     job["company"],
                     job["location"],
-                    job["url"],
+                    _clean_url(job["url"]),
                     job["date_posted"],
                     job["source"],
                     job.get("salary", ""),
