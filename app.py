@@ -13,6 +13,7 @@ import os
 import threading
 import webbrowser
 from flask import Flask, jsonify, request, render_template, abort
+from apscheduler.schedulers.background import BackgroundScheduler
 
 import config
 import tracker
@@ -189,11 +190,42 @@ def api_search_status():
     return jsonify(dict(_search_state))
 
 
+# ── Hourly scheduled search ───────────────────────────────────────────────────
+
+def _run_scheduled_search():
+    """Runs automatically on a schedule — same logic as the manual search."""
+    with _search_lock:
+        if _search_state["running"]:
+            return  # already running, skip this tick
+        _search_state["running"]  = True
+        _search_state["progress"] = "Scheduled search running..."
+        _search_state["added"]    = 0
+        _search_state["found"]    = 0
+    try:
+        results = searcher.search_all(config.TARGET_ROLES)
+        added   = tracker.save_jobs(results)
+        with _search_lock:
+            _search_state["found"]    = len(results)
+            _search_state["added"]    = added
+            _search_state["progress"] = f"Done! Found {len(results)}, {added} new."
+            _search_state["running"]  = False
+    except Exception as e:
+        with _search_lock:
+            _search_state["progress"] = f"Scheduled search error: {e}"
+            _search_state["running"]  = False
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     is_local = port == 5000 and not os.environ.get("RAILWAY_ENVIRONMENT")
+
+    # Start hourly scheduler (skip on local to avoid burning API quota while developing)
+    if not is_local:
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(_run_scheduled_search, "interval", hours=1, id="hourly_search")
+        scheduler.start()
 
     if is_local:
         def _open_browser():
