@@ -70,6 +70,12 @@ def _score_job(title: str, description: str) -> int:
     return score
 
 
+def _is_relevant_title(title: str) -> bool:
+    """Return True if the job title contains at least one design-related keyword."""
+    title_lower = title.lower()
+    return any(kw in title_lower for kw in config.RELEVANT_TITLE_KEYWORDS)
+
+
 def _is_us_location(location: str) -> bool:
     """Return True if the location looks like US, Remote, or worldwide."""
     loc = location.lower().strip()
@@ -545,7 +551,7 @@ def search_all(roles: list[str] | None = None) -> list[dict]:
             results = search_fn(role)
             for job in results:
                 url = job.get("url", "")
-                if url and url not in seen_urls:
+                if url and url not in seen_urls and _is_relevant_title(job.get("title", "")):
                     seen_urls.add(url)
                     all_results.append(job)
             time.sleep(0.3)  # be polite to APIs

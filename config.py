@@ -69,6 +69,18 @@ ADZUNA_APP_KEY = ""
 # The Muse: Sign up free at https://www.themuse.com/developers/api/v2
 THE_MUSE_API_KEY = ""
 
+# ── Title relevance filter ───────────────────────────────────────────────────
+# Job title must contain at least one of these to be kept.
+# This prevents "Software Engineer" etc. from slipping through when API
+# descriptions happen to mention "product", "visual", etc.
+RELEVANT_TITLE_KEYWORDS = [
+    "design", "designer", "ux", "ui", "user experience", "user interface",
+    "product design", "visual", "brand", "creative", "graphic",
+    "marketing", "content", "researcher", "research",
+    "front-end", "frontend", "front end",
+    "illustrat",  # illustrator / illustration
+]
+
 # ── Seniority filter (based on ~4 years experience) ─────────────────────────
 # Jobs whose TITLE contains any of these words get a score penalty so they
 # sink below relevant results. They are NOT hidden — still visible if needed.
