@@ -70,6 +70,45 @@ def _score_job(title: str, description: str) -> int:
     return score
 
 
+def _is_us_location(location: str) -> bool:
+    """Return True if the location looks like US, Remote, or worldwide."""
+    loc = location.lower().strip()
+    if not loc:
+        return True  # missing location — keep it
+    us_indicators = [
+        "united states", "usa", "u.s.", "us ",
+        "remote", "anywhere", "worldwide", "global", "north america",
+        # US states (abbreviations after comma, e.g. "Seattle, WA")
+        ", al", ", ak", ", az", ", ar", ", ca", ", co", ", ct", ", de",
+        ", fl", ", ga", ", hi", ", id", ", il", ", in", ", ia", ", ks",
+        ", ky", ", la", ", me", ", md", ", ma", ", mi", ", mn", ", ms",
+        ", mo", ", mt", ", ne", ", nv", ", nh", ", nj", ", nm", ", ny",
+        ", nc", ", nd", ", oh", ", ok", ", or", ", pa", ", ri", ", sc",
+        ", sd", ", tn", ", tx", ", ut", ", vt", ", va", ", wa", ", wv",
+        ", wi", ", wy", ", dc",
+    ]
+    # Quick pass for obvious US / remote
+    if any(indicator in loc for indicator in us_indicators):
+        return True
+    # Reject locations that name a non-US country
+    non_us = [
+        "romania", "germany", "india", "uk", "united kingdom", "canada",
+        "brazil", "france", "spain", "italy", "netherlands", "australia",
+        "poland", "portugal", "mexico", "argentina", "colombia", "chile",
+        "japan", "china", "korea", "singapore", "israel", "turkey",
+        "sweden", "norway", "denmark", "finland", "ireland", "austria",
+        "switzerland", "belgium", "czech", "hungary", "ukraine", "russia",
+        "philippines", "indonesia", "vietnam", "thailand", "malaysia",
+        "south africa", "nigeria", "kenya", "egypt", "pakistan",
+        "new zealand", "europe", "asia", "africa", "latin america",
+        "emea", "apac",
+    ]
+    if any(country in loc for country in non_us):
+        return False
+    # If we can't tell, keep it (could be a city name we don't recognise)
+    return True
+
+
 def _matches_query(text: str, query: str) -> bool:
     """Check if text matches the query — at least one meaningful word must appear."""
     text_lower = text.lower()
@@ -117,11 +156,15 @@ def search_remotive(query: str) -> list[dict]:
         if not (_matches_query(combined, query) or (is_design_category and _matches_query(title, query))):
             continue
 
+        location = job.get("candidate_required_location", "Anywhere")
+        if not _is_us_location(location):
+            continue
+
         clean_desc = re.sub(r"<[^>]+>", "", desc)
         results.append({
             "title": title,
             "company": job.get("company_name", ""),
-            "location": job.get("candidate_required_location", "Anywhere"),
+            "location": location,
             "url": job.get("url", ""),
             "date_posted": job.get("publication_date", "")[:10],
             "source": "Remotive",
@@ -165,11 +208,14 @@ def search_remoteok(query: str) -> list[dict]:
         combined = f"{title} {desc} {tags}"
         if not _matches_query(combined, query):
             continue
+        location = job.get("location", "Remote")
+        if not _is_us_location(location):
+            continue
         clean_desc = re.sub(r"<[^>]+>", "", desc) if desc else ""
         results.append({
             "title": title,
             "company": job.get("company", ""),
-            "location": job.get("location", "Remote"),
+            "location": location,
             "url": job.get("url", ""),
             "date_posted": job.get("date", "")[:10],
             "source": "RemoteOK",
@@ -216,6 +262,8 @@ def search_themuse(query: str) -> list[dict]:
             )
             combined = f"{title} {desc}"
             if not _matches_query(combined, query):
+                continue
+            if not _is_us_location(locations):
                 continue
             clean_desc = re.sub(r"<[^>]+>", "", desc)
             levels = [lv.get("name", "") for lv in job.get("levels", [])]
@@ -267,11 +315,7 @@ def search_jobicy(query: str) -> list[dict]:
             continue
 
         geo = job.get("jobGeo", "")
-        # Filter for US/remote/anywhere
-        geo_lower = geo.lower() if geo else ""
-        if geo_lower and not any(
-            x in geo_lower for x in ["usa", "us", "united states", "anywhere", "worldwide", "north america", ""]
-        ):
+        if not _is_us_location(geo):
             continue
 
         clean_desc = re.sub(r"<[^>]+>", "", desc) if desc else ""
@@ -322,13 +366,17 @@ def search_himalayas(query: str) -> list[dict]:
         if not _matches_query(combined, query):
             continue
 
+        location = ", ".join(job.get("locationRestrictions", [])) or "Remote"
+        if not _is_us_location(location):
+            continue
+
         clean_desc = re.sub(r"<[^>]+>", "", desc) if desc else ""
         sal_min = str(job.get("minSalary", ""))
         sal_max = str(job.get("maxSalary", ""))
         results.append({
             "title": title,
             "company": job.get("companyName", ""),
-            "location": ", ".join(job.get("locationRestrictions", [])) or "Remote",
+            "location": location,
             "url": job.get("applicationLink", "") or job.get("pageUrl", ""),
             "date_posted": str(job.get("pubDate", ""))[:10],
             "source": "Himalayas",
