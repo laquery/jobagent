@@ -74,11 +74,38 @@ THE_MUSE_API_KEY = ""
 # This prevents "Software Engineer" etc. from slipping through when API
 # descriptions happen to mention "product", "visual", etc.
 RELEVANT_TITLE_KEYWORDS = [
-    "design", "designer", "ux", "ui", "user experience", "user interface",
-    "product design", "visual", "brand", "creative", "graphic",
-    "marketing", "content", "researcher", "research",
+    "design", "designer", "user experience", "user interface",
+    "product design", "visual design", "brand design",
+    "creative", "graphic",
+    "marketing design", "content design", "content strateg",
     "front-end", "frontend", "front end",
     "illustrat",  # illustrator / illustration
+]
+# Short keywords (ux, ui) matched as whole words, not substrings
+RELEVANT_TITLE_KEYWORDS_WORD = ["ux", "ui"]
+
+# ── Title exclusion filter ──────────────────────────────────────────────────
+# If a job title contains ANY of these, reject it even if it matches above.
+# This removes hardware designers, software engineers, recruiters, etc.
+EXCLUDED_TITLE_KEYWORDS = [
+    "software engineer", "data engineer", "devops", "sre ",
+    "backend", "fullstack", "full-stack", "full stack",
+    "network engineer", "network asic", "asic ", "hardware",
+    "electrical engineer", "mechanical engineer", "civil engineer",
+    "talent acquisition", "recruiter", "recruiting",
+    "sales rep", "account executive", "account manager",
+    "game design", "game designer",
+    "instructional design",
+    "interior design",
+    "fashion design",
+    "floral design",
+    "landscape design",
+    "content reviewer", "content moderator",
+    "data analyst", "data scientist", "machine learning",
+    "security engineer", "reliability engineer",
+    "project manager", "program manager", "product manager",
+    "copywriter", "copy editor",
+    "photographer",
 ]
 
 # ── Seniority filter (based on ~4 years experience) ─────────────────────────

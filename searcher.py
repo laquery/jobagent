@@ -5,6 +5,7 @@ Also generates direct search URLs for major job boards.
 
 import re
 import time
+import xml.etree.ElementTree as ET
 from urllib.parse import quote_plus
 
 import requests
@@ -71,9 +72,19 @@ def _score_job(title: str, description: str) -> int:
 
 
 def _is_relevant_title(title: str) -> bool:
-    """Return True if the job title contains at least one design-related keyword."""
+    """Return True if the job title contains at least one design-related keyword
+    and none of the excluded keywords."""
     title_lower = title.lower()
-    return any(kw in title_lower for kw in config.RELEVANT_TITLE_KEYWORDS)
+    if any(ex in title_lower for ex in config.EXCLUDED_TITLE_KEYWORDS):
+        return False
+    # Substring match for longer keywords
+    if any(kw in title_lower for kw in config.RELEVANT_TITLE_KEYWORDS):
+        return True
+    # Whole-word match for short keywords (ux, ui) to avoid false positives
+    for kw in config.RELEVANT_TITLE_KEYWORDS_WORD:
+        if re.search(rf"\b{kw}\b", title_lower):
+            return True
+    return False
 
 
 def _is_us_location(location: str) -> bool:
@@ -305,7 +316,7 @@ def search_themuse(query: str) -> list[dict]:
 def search_jobicy(query: str) -> list[dict]:
     """Search Jobicy for remote jobs."""
     url = "https://jobicy.com/api/v2/remote-jobs"
-    params = {"count": 50, "industry": "design"}
+    params = {"count": 50}
     headers = {"User-Agent": "Mozilla/5.0 (JobAgent/1.0)"}
     try:
         resp = requests.get(url, params=params, headers=headers, timeout=15)
@@ -543,6 +554,72 @@ def search_adzuna(query: str) -> list[dict]:
     ]
 
 
+# ── Source: We Work Remotely (free, RSS, design category) ────────────────────
+
+def search_weworkremotely(query: str) -> list[dict]:
+    """Search We Work Remotely design category via RSS feed."""
+    url = "https://weworkremotely.com/categories/remote-design-jobs.rss"
+    try:
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        root = ET.fromstring(resp.text)
+    except Exception as e:
+        print(f"  [WWR] Error: {e}")
+        return []
+
+    results = []
+    for item in root.findall(".//item"):
+        raw_title = item.findtext("title", "")
+        # Title format is "Company: Job Title"
+        if ": " in raw_title:
+            company, title = raw_title.split(": ", 1)
+        else:
+            company, title = "", raw_title
+
+        desc = item.findtext("description", "") or ""
+        region = item.findtext("region", "") or ""
+        combined = f"{title} {desc}"
+        if not _matches_query(combined, query):
+            continue
+        if not _is_us_location(region or "Remote"):
+            continue
+
+        clean_desc = re.sub(r"<[^>]+>", "", desc)
+        link = item.findtext("link", "") or item.findtext("guid", "")
+        pub_date = item.findtext("pubDate", "")
+        # Parse "Thu, 26 Feb 2026 16:43:31 +0000" to "2026-02-26"
+        date_posted = ""
+        if pub_date:
+            try:
+                from email.utils import parsedate_to_datetime
+                dt = parsedate_to_datetime(pub_date)
+                date_posted = dt.strftime("%Y-%m-%d")
+            except Exception:
+                date_posted = pub_date[:16]
+
+        emp_type = item.findtext("type", "") or ""
+        results.append({
+            "title": title.strip(),
+            "company": company.strip(),
+            "location": region or "Remote",
+            "url": link,
+            "date_posted": date_posted,
+            "source": "WWR",
+            "salary": "",
+            "salary_min": "",
+            "salary_max": "",
+            "employment_type": emp_type,
+            "is_remote": True,
+            "experience_level": _extract_experience(f"{title} {clean_desc}"),
+            "apply_deadline": _extract_deadline(clean_desc),
+            "description": clean_desc[:1000],
+            "score": _score_job(title, desc),
+        })
+    return sorted(results, key=lambda x: x["score"], reverse=True)[
+        : config.MAX_RESULTS_PER_SOURCE
+    ]
+
+
 # ── Main search orchestrator ─────────────────────────────────────────────────
 
 ALL_SOURCES = [
@@ -551,6 +628,7 @@ ALL_SOURCES = [
     ("The Muse", search_themuse),
     ("Jobicy", search_jobicy),
     ("Himalayas", search_himalayas),
+    ("WWR", search_weworkremotely),
     ("JSearch", search_jsearch),
     ("Adzuna", search_adzuna),
 ]
