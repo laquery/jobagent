@@ -125,6 +125,41 @@ OVERQUALIFIED_TITLE_KEYWORDS = [
 # How many points to subtract per overqualified keyword found in the title
 OVERQUALIFIED_PENALTY = 20
 
+# ── Company Career Pages ─────────────────────────────────────────────────────
+# Top tech & design companies with public job board APIs.
+# "ats" is the applicant tracking system: "greenhouse" or "lever".
+# "slug" is the company's board identifier.
+COMPANY_BOARDS = [
+    # Design-forward companies
+    {"name": "Figma",        "ats": "greenhouse", "slug": "figma"},
+    {"name": "Canva",        "ats": "greenhouse", "slug": "canva"},
+    {"name": "Squarespace",  "ats": "greenhouse", "slug": "squarespace"},
+    {"name": "Webflow",      "ats": "greenhouse", "slug": "webflow"},
+    {"name": "Grammarly",    "ats": "greenhouse", "slug": "grammarly"},
+    {"name": "Duolingo",     "ats": "greenhouse", "slug": "duolingo"},
+    # Big tech
+    {"name": "Stripe",       "ats": "greenhouse", "slug": "stripe"},
+    {"name": "Airbnb",       "ats": "greenhouse", "slug": "airbnb"},
+    {"name": "Spotify",      "ats": "lever",      "slug": "spotify"},
+    {"name": "Discord",      "ats": "greenhouse", "slug": "discord"},
+    {"name": "Dropbox",      "ats": "greenhouse", "slug": "dropbox"},
+    {"name": "Coinbase",     "ats": "greenhouse", "slug": "coinbase"},
+    {"name": "Cloudflare",   "ats": "greenhouse", "slug": "cloudflare"},
+    {"name": "Databricks",   "ats": "greenhouse", "slug": "databricks"},
+    {"name": "GitLab",       "ats": "greenhouse", "slug": "gitlab"},
+    # Growth-stage
+    {"name": "Intercom",     "ats": "greenhouse", "slug": "intercom"},
+    {"name": "Asana",        "ats": "greenhouse", "slug": "asana"},
+    {"name": "Brex",         "ats": "greenhouse", "slug": "brex"},
+    {"name": "Plaid",        "ats": "lever",      "slug": "plaid"},
+    {"name": "Robinhood",    "ats": "greenhouse", "slug": "robinhood"},
+    {"name": "Affirm",       "ats": "greenhouse", "slug": "affirm"},
+    {"name": "Gusto",        "ats": "greenhouse", "slug": "gusto"},
+    {"name": "Lyft",         "ats": "greenhouse", "slug": "lyft"},
+    {"name": "Instacart",    "ats": "greenhouse", "slug": "instacart"},
+    {"name": "Vercel",       "ats": "greenhouse", "slug": "vercel"},
+]
+
 # ── Search Settings ──────────────────────────────────────────────────────────
 MAX_RESULTS_PER_SOURCE = 25
 DATABASE_PATH = "jobagent.db"

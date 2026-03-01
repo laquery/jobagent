@@ -119,6 +119,12 @@ def _is_us_location(location: str) -> bool:
         "south africa", "nigeria", "kenya", "egypt", "pakistan",
         "new zealand", "europe", "asia", "africa", "latin america",
         "emea", "apac",
+        # Common non-US cities
+        "london", "dublin", "toronto", "vancouver", "montreal",
+        "berlin", "munich", "paris", "amsterdam", "barcelona",
+        "tokyo", "bangalore", "hyderabad", "mumbai", "pune",
+        "tel aviv", "são paulo", "sao paulo", "sydney", "melbourne",
+        "denmark", "copenhagen",
     ]
     if any(country in loc for country in non_us):
         return False
@@ -620,6 +626,112 @@ def search_weworkremotely(query: str) -> list[dict]:
     ]
 
 
+# ── Source: Company Career Pages (Greenhouse + Lever, free, no key) ──────────
+
+def _fetch_greenhouse_jobs(slug: str) -> list[dict]:
+    """Fetch all jobs from a Greenhouse board."""
+    url = f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        return resp.json().get("jobs", [])
+    except Exception:
+        return []
+
+
+def _fetch_lever_jobs(slug: str) -> list[dict]:
+    """Fetch all jobs from a Lever board."""
+    url = f"https://api.lever.co/v0/postings/{slug}"
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def search_company_boards(query: str) -> list[dict]:
+    """Search career pages of top tech/design companies for design roles."""
+    results = []
+
+    for board in config.COMPANY_BOARDS:
+        company_name = board["name"]
+        ats = board["ats"]
+        slug = board["slug"]
+
+        if ats == "greenhouse":
+            raw_jobs = _fetch_greenhouse_jobs(slug)
+            for job in raw_jobs:
+                title = job.get("title", "")
+                location = job.get("location", {}).get("name", "") if isinstance(job.get("location"), dict) else ""
+                if not _is_relevant_title(title):
+                    continue
+                if not _is_us_location(location):
+                    continue
+                url = job.get("absolute_url", "")
+                updated = (job.get("updated_at") or "")[:10]
+                results.append({
+                    "title": title,
+                    "company": company_name,
+                    "location": location or "See listing",
+                    "url": url,
+                    "date_posted": updated,
+                    "source": f"Careers",
+                    "salary": "",
+                    "salary_min": "",
+                    "salary_max": "",
+                    "employment_type": "",
+                    "is_remote": "remote" in location.lower(),
+                    "experience_level": _extract_experience(title),
+                    "apply_deadline": "",
+                    "description": "",
+                    "score": _score_job(title, ""),
+                })
+
+        elif ats == "lever":
+            raw_jobs = _fetch_lever_jobs(slug)
+            for job in raw_jobs:
+                title = job.get("text", "")
+                cats = job.get("categories", {})
+                location = cats.get("location", "")
+                all_locs = ", ".join(cats.get("allLocations", []))
+                loc_str = all_locs or location
+                if not _is_relevant_title(title):
+                    continue
+                if not _is_us_location(loc_str):
+                    continue
+                url = job.get("hostedUrl", "")
+                created = job.get("createdAt")
+                date_posted = ""
+                if created:
+                    from datetime import datetime, timezone
+                    date_posted = datetime.fromtimestamp(
+                        created / 1000, tz=timezone.utc
+                    ).strftime("%Y-%m-%d")
+                results.append({
+                    "title": title,
+                    "company": company_name,
+                    "location": loc_str or "See listing",
+                    "url": url,
+                    "date_posted": date_posted,
+                    "source": f"Careers",
+                    "salary": "",
+                    "salary_min": "",
+                    "salary_max": "",
+                    "employment_type": cats.get("commitment", ""),
+                    "is_remote": "remote" in loc_str.lower(),
+                    "experience_level": _extract_experience(title),
+                    "apply_deadline": "",
+                    "description": "",
+                    "score": _score_job(title, ""),
+                })
+
+        time.sleep(0.2)  # be polite
+
+    return sorted(results, key=lambda x: x["score"], reverse=True)
+
+
 # ── Main search orchestrator ─────────────────────────────────────────────────
 
 ALL_SOURCES = [
@@ -642,6 +754,7 @@ def search_all(roles: list[str] | None = None) -> list[dict]:
     seen_urls = set()
     all_results = []
 
+    # 1) Job board APIs — searched once per role
     for role in roles:
         for source_name, search_fn in ALL_SOURCES:
             results = search_fn(role)
@@ -651,6 +764,14 @@ def search_all(roles: list[str] | None = None) -> list[dict]:
                     seen_urls.add(url)
                     all_results.append(job)
             time.sleep(0.3)  # be polite to APIs
+
+    # 2) Company career pages — searched once (title filter is built-in)
+    career_jobs = search_company_boards("")
+    for job in career_jobs:
+        url = job.get("url", "")
+        if url and url not in seen_urls:
+            seen_urls.add(url)
+            all_results.append(job)
 
     # Sort by score descending
     all_results.sort(key=lambda x: x["score"], reverse=True)
