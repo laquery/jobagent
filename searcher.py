@@ -376,37 +376,37 @@ def search_himalayas(query: str) -> list[dict]:
             break
 
         for job in jobs:
-        title = job.get("title", "")
-        desc = job.get("description", "")
-        categories = " ".join(job.get("categories", []))
-        combined = f"{title} {desc} {categories}"
-        if not _matches_query(combined, query):
-            continue
+            title = job.get("title", "")
+            desc = job.get("description", "")
+            categories = " ".join(job.get("categories", []))
+            combined = f"{title} {desc} {categories}"
+            if not _matches_query(combined, query):
+                continue
 
-        location = ", ".join(job.get("locationRestrictions", [])) or "Remote"
-        if not _is_us_location(location):
-            continue
+            location = ", ".join(job.get("locationRestrictions", [])) or "Remote"
+            if not _is_us_location(location):
+                continue
 
-        clean_desc = re.sub(r"<[^>]+>", "", desc) if desc else ""
-        sal_min = str(job.get("minSalary", ""))
-        sal_max = str(job.get("maxSalary", ""))
-        results.append({
-            "title": title,
-            "company": job.get("companyName", ""),
-            "location": location,
-            "url": job.get("applicationLink", "") or job.get("pageUrl", ""),
-            "date_posted": str(job.get("pubDate", ""))[:10],
-            "source": "Himalayas",
-            "salary": f"${sal_min}-${sal_max}" if sal_min else "",
-            "salary_min": sal_min,
-            "salary_max": sal_max,
-            "employment_type": job.get("jobType", ""),
-            "is_remote": True,
-            "experience_level": _extract_experience(f"{title} {clean_desc}"),
-            "apply_deadline": _extract_deadline(clean_desc),
-            "description": clean_desc[:1000],
-            "score": _score_job(title, desc or ""),
-        })
+            clean_desc = re.sub(r"<[^>]+>", "", desc) if desc else ""
+            sal_min = str(job.get("minSalary", ""))
+            sal_max = str(job.get("maxSalary", ""))
+            results.append({
+                "title": title,
+                "company": job.get("companyName", ""),
+                "location": location,
+                "url": job.get("applicationLink", "") or job.get("pageUrl", ""),
+                "date_posted": str(job.get("pubDate", ""))[:10],
+                "source": "Himalayas",
+                "salary": f"${sal_min}-${sal_max}" if sal_min else "",
+                "salary_min": sal_min,
+                "salary_max": sal_max,
+                "employment_type": job.get("jobType", ""),
+                "is_remote": True,
+                "experience_level": _extract_experience(f"{title} {clean_desc}"),
+                "apply_deadline": _extract_deadline(clean_desc),
+                "description": clean_desc[:1000],
+                "score": _score_job(title, desc or ""),
+            })
     return sorted(results, key=lambda x: x["score"], reverse=True)[
         : config.MAX_RESULTS_PER_SOURCE
     ]
@@ -515,29 +515,29 @@ def search_adzuna(query: str) -> list[dict]:
             break
 
         for job in jobs:
-        title = job.get("title", "")
-        desc = job.get("description", "")
-        clean_desc = re.sub(r"<[^>]+>", "", desc)
-        sal_min = job.get("salary_min")
-        sal_max = job.get("salary_max")
-        salary_str = f"${sal_min:,.0f}-${sal_max:,.0f}" if sal_min and sal_max else ""
-        results.append({
-            "title": re.sub(r"<[^>]+>", "", title),
-            "company": job.get("company", {}).get("display_name", ""),
-            "location": job.get("location", {}).get("display_name", ""),
-            "url": job.get("redirect_url", ""),
-            "date_posted": (job.get("created") or "")[:10],
-            "source": "Adzuna",
-            "salary": salary_str,
-            "salary_min": str(sal_min) if sal_min else "",
-            "salary_max": str(sal_max) if sal_max else "",
-            "employment_type": job.get("contract_type", "") or "",
-            "is_remote": False,
-            "experience_level": _extract_experience(f"{title} {clean_desc}"),
-            "apply_deadline": _extract_deadline(clean_desc),
-            "description": clean_desc[:1000],
-            "score": _score_job(title, desc),
-        })
+            title = job.get("title", "")
+            desc = job.get("description", "")
+            clean_desc = re.sub(r"<[^>]+>", "", desc)
+            sal_min = job.get("salary_min")
+            sal_max = job.get("salary_max")
+            salary_str = f"${sal_min:,.0f}-${sal_max:,.0f}" if sal_min and sal_max else ""
+            results.append({
+                "title": re.sub(r"<[^>]+>", "", title),
+                "company": job.get("company", {}).get("display_name", ""),
+                "location": job.get("location", {}).get("display_name", ""),
+                "url": job.get("redirect_url", ""),
+                "date_posted": (job.get("created") or "")[:10],
+                "source": "Adzuna",
+                "salary": salary_str,
+                "salary_min": str(sal_min) if sal_min else "",
+                "salary_max": str(sal_max) if sal_max else "",
+                "employment_type": job.get("contract_type", "") or "",
+                "is_remote": False,
+                "experience_level": _extract_experience(f"{title} {clean_desc}"),
+                "apply_deadline": _extract_deadline(clean_desc),
+                "description": clean_desc[:1000],
+                "score": _score_job(title, desc),
+            })
     return sorted(results, key=lambda x: x["score"], reverse=True)[
         : config.MAX_RESULTS_PER_SOURCE
     ]
