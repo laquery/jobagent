@@ -147,6 +147,13 @@ COMPANY_BOARDS = [
     {"name": "Cloudflare",   "ats": "greenhouse", "slug": "cloudflare"},
     {"name": "Databricks",   "ats": "greenhouse", "slug": "databricks"},
     {"name": "GitLab",       "ats": "greenhouse", "slug": "gitlab"},
+    {"name": "Roblox",       "ats": "greenhouse", "slug": "roblox"},
+    # Seattle / Bellevue area
+    {"name": "Twitch",       "ats": "greenhouse", "slug": "twitch"},
+    {"name": "LinkedIn",     "ats": "greenhouse", "slug": "linkedin"},
+    {"name": "Smartsheet",   "ats": "greenhouse", "slug": "smartsheet"},
+    {"name": "Okta",         "ats": "greenhouse", "slug": "okta"},
+    {"name": "DeepMind",     "ats": "greenhouse", "slug": "deepmind"},
     # Growth-stage
     {"name": "Intercom",     "ats": "greenhouse", "slug": "intercom"},
     {"name": "Asana",        "ats": "greenhouse", "slug": "asana"},
