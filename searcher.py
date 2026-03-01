@@ -137,8 +137,8 @@ def _matches_query(text: str, query: str) -> bool:
 def search_remotive(query: str) -> list[dict]:
     """Search Remotive for remote design jobs."""
     url = "https://remotive.com/api/remote-jobs"
-    # Search without category restriction first, then filter
-    params = {"limit": 100}
+    # Fetch all jobs (no limit) and filter client-side
+    params = {}
     try:
         resp = requests.get(url, params=params, timeout=15)
         resp.raise_for_status()
@@ -248,8 +248,9 @@ def search_themuse(query: str) -> list[dict]:
     # Query multiple relevant categories
     categories = ["Design", "Marketing & PR", "Project Management"]
     for cat in categories:
+      for page in range(5):  # pages 0-4, ~20 results each
         url = "https://www.themuse.com/api/public/jobs"
-        params = {"category": cat, "page": 0}
+        params = {"category": cat, "page": page}
         if config.THE_MUSE_API_KEY:
             params["api_key"] = config.THE_MUSE_API_KEY
         try:
@@ -257,9 +258,13 @@ def search_themuse(query: str) -> list[dict]:
             resp.raise_for_status()
             data = resp.json()
         except Exception:
-            continue
+            break  # stop paginating this category on error
 
-        for job in data.get("results", []):
+        jobs = data.get("results", [])
+        if not jobs:
+            break  # no more pages
+
+        for job in jobs:
             title = job.get("name", "")
             company = job.get("company", {}).get("name", "")
             desc = job.get("contents", "")
@@ -352,19 +357,25 @@ def search_jobicy(query: str) -> list[dict]:
 # ── Source: Himalayas (free, no key, remote jobs) ────────────────────────────
 
 def search_himalayas(query: str) -> list[dict]:
-    """Search Himalayas.app for remote jobs."""
+    """Search Himalayas.app for remote jobs with offset pagination."""
     url = "https://himalayas.app/jobs/api"
-    params = {"limit": 50}
-    try:
-        resp = requests.get(url, params=params, timeout=15)
-        resp.raise_for_status()
-        data = resp.json()
-    except Exception as e:
-        print(f"  [Himalayas] Error: {e}")
-        return []
-
     results = []
-    for job in data.get("jobs", []):
+    for offset in range(0, 100, 20):  # pages of 20, up to 100 jobs
+        params = {"limit": 20, "offset": offset}
+        try:
+            resp = requests.get(url, params=params, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            if offset == 0:
+                print(f"  [Himalayas] Error: {e}")
+            break
+
+        jobs = data.get("jobs", [])
+        if not jobs:
+            break
+
+        for job in jobs:
         title = job.get("title", "")
         desc = job.get("description", "")
         categories = " ".join(job.get("categories", []))
@@ -415,7 +426,7 @@ def search_jsearch(query: str) -> list[dict]:
     params = {
         "query": f"{query} in United States",
         "page": "1",
-        "num_pages": "1",
+        "num_pages": "3",
         "date_posted": "month",
         "remote_jobs_only": "false",
     }
@@ -476,27 +487,34 @@ def search_jsearch(query: str) -> list[dict]:
 # ── Source: Adzuna (free tier — needs key) ───────────────────────────────────
 
 def search_adzuna(query: str) -> list[dict]:
-    """Search Adzuna for US design jobs."""
+    """Search Adzuna for US design jobs across multiple pages."""
     if not config.ADZUNA_APP_ID or not config.ADZUNA_APP_KEY:
-        return []
-    url = (
-        f"https://api.adzuna.com/v1/api/jobs/us/search/1"
-        f"?app_id={config.ADZUNA_APP_ID}"
-        f"&app_key={config.ADZUNA_APP_KEY}"
-        f"&results_per_page={config.MAX_RESULTS_PER_SOURCE}"
-        f"&what={quote_plus(query)}"
-        f"&content-type=application/json"
-    )
-    try:
-        resp = requests.get(url, timeout=15)
-        resp.raise_for_status()
-        data = resp.json()
-    except Exception as e:
-        print(f"  [Adzuna] Error: {e}")
         return []
 
     results = []
-    for job in data.get("results", []):
+    for page in range(1, 4):  # pages 1-3
+        url = (
+            f"https://api.adzuna.com/v1/api/jobs/us/search/{page}"
+            f"?app_id={config.ADZUNA_APP_ID}"
+            f"&app_key={config.ADZUNA_APP_KEY}"
+            f"&results_per_page=50"
+            f"&what={quote_plus(query)}"
+            f"&content-type=application/json"
+        )
+        try:
+            resp = requests.get(url, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            if page == 1:
+                print(f"  [Adzuna] Error: {e}")
+            break
+
+        jobs = data.get("results", [])
+        if not jobs:
+            break
+
+        for job in jobs:
         title = job.get("title", "")
         desc = job.get("description", "")
         clean_desc = re.sub(r"<[^>]+>", "", desc)
